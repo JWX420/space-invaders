@@ -10,6 +10,7 @@ Game::Game() {
     height = 10;   // hauteur de l'écran
     playerX = width / 2;
     // créer une ligne d'ennemis en haut
+    enemyDirection = 1; // les ennemis commencent en allant vers la droite
     for (int i = 0; i < 5; i++) {
         Enemy e;
         e.x = 2 + i * 3; // espacement horizontal
@@ -51,7 +52,8 @@ void Game::run() {
         if (input == 'q') running = false;
 
         update();      // bouger les tirs
-        usleep(100000); // pause de 0.1s pour limiter la vitesse du jeu
+        usleep(100000); // 0.03 s → 3x plus fluide
+
     }
 }
 
@@ -64,30 +66,51 @@ void Game::processInput() {
     if (input == 'q') running = false; // quitter le jeu
     if (input == 'a' && playerX > 0) playerX--; // gauche
     if (input == 'd' && playerX < width-1) playerX++; // droite
-    if (input == ' ') {
+    if (input == 't') {
     bulletsX.push_back(playerX);  // ajouter la position X du tir
     bulletsY.push_back(1);        // position Y initiale du tir (juste au-dessus du joueur)
-}; // barre d’espace pour tirer
+}; // t d’espace pour tirer
 }
 
 void Game::update() {
-    // déplacer les tirs vers le haut
+
+    // --- Déplacement des ennemis ---
+    bool mustGoDown = false;
+
+    // vérifier si un ennemi touche le bord
+    for (const auto& e : enemies) {
+        if (e.x + enemyDirection < 0 || e.x + enemyDirection >= width) {
+            mustGoDown = true;
+            break;
+        }
+    }
+
+    // appliquer le mouvement
+    if (mustGoDown) {
+        enemyDirection *= -1;   // changer de direction
+        for (auto& e : enemies) e.y -= 1;
+    } else {
+        for (auto& e : enemies) e.x += enemyDirection;
+    }
+
+
+    // --- Mouvements des tirs ---
     for (int i = 0; i < bulletsY.size(); i++) {
         bulletsY[i]++;
     }
 
-    // supprimer les tirs qui dépassent l'écran
+    // supprimer les tirs hors écran
     for (int i = bulletsY.size() - 1; i >= 0; i--) {
         if (bulletsY[i] >= height) {
             bulletsY.erase(bulletsY.begin() + i);
             bulletsX.erase(bulletsX.begin() + i);
         }
     }
-    // vérifier collision tir / ennemi
+
+    // vérifier collisions
     for (int i = bulletsY.size() - 1; i >= 0; i--) {
         for (int j = enemies.size() - 1; j >= 0; j--) {
             if (bulletsX[i] == enemies[j].x && bulletsY[i] == enemies[j].y) {
-                // supprimer l'ennemi et le tir
                 enemies.erase(enemies.begin() + j);
                 bulletsX.erase(bulletsX.begin() + i);
                 bulletsY.erase(bulletsY.begin() + i);
@@ -95,8 +118,6 @@ void Game::update() {
             }
         }
     }
-
-
 }
 
 

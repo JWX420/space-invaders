@@ -17,10 +17,13 @@ private:
     int height;      // hauteur de l'écran
     int playerX;     // position du joueur
     bool running;    // état du jeu
+    
     std::vector<int> bulletsX; // positions X des tirs
     std::vector<int> bulletsY; // positions Y des tirs
     
 
     std::vector<Enemy> enemies;
+
+    int enemyDirection; // +1 = droite, -1 = gauche
 
 };
