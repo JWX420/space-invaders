@@ -1,4 +1,8 @@
 #include <iostream>
+#include <vector>
+#include <unistd.h>     // pour usleep
+#include <termios.h>    // pour lire les touches sans Entrée
+#include <stdio.h>
 #include "Game.hpp"
 
 Game::Game() {
@@ -8,23 +12,39 @@ Game::Game() {
     running = true;
 }
 
+// fonction pour lire une touche sans Entrée
+char getInput() {
+    char buf = 0;
+    struct termios old = {0};
+    if (tcgetattr(0, &old) < 0) perror("tcgetattr()");
+    old.c_lflag &= ~ICANON; // désactive le buffering
+    old.c_lflag &= ~ECHO;   // ne pas afficher la touche
+    old.c_cc[VMIN] = 0;
+    old.c_cc[VTIME] = 0;
+    if (tcsetattr(0, TCSANOW, &old) < 0) perror("tcsetattr ICANON");
+    if (read(0, &buf, 1) < 0) {
+        // pas de touche appuyée
+    }
+    old.c_lflag |= ICANON;
+    old.c_lflag |= ECHO;
+    if (tcsetattr(0, TCSADRAIN, &old) < 0) perror("tcsetattr ~ICANON");
+    return buf;
+}
+
 
 void Game::run() {
-    char input;
     while (running) {
         render();
-        std::cout << "Touche: ";
-        std::cin >> input; // appuyer sur la touche + Entrée
+
+        char input = getInput();
 
         if (input == 'a' && playerX > 0) playerX--;
-        if (input == 'd' && playerX < width-1) playerX++;
-        if (input == 's') { // tirer
-            bulletsX.push_back(playerX);
-            bulletsY.push_back(1);
-        }
+        if (input == 'd' && playerX < width - 1) playerX++;
+        if (input == 't') shoot(); // tirer
         if (input == 'q') running = false;
 
-        update(); // faire bouger les tirs
+        update();      // bouger les tirs
+        usleep(100000); // pause de 0.1s pour limiter la vitesse du jeu
     }
 }
 
