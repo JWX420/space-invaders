@@ -67,50 +67,61 @@ void Game::run() {
 }
 
 // ======================================================
-//               MISE À JOUR DE L’ÉTAT DU JEU
+//                  MISE À JOUR DU JEU
 // ======================================================
 void Game::update() {
-    // ---------------- Déplacement horizontal des ennemis ----------------
-    enemyMoveCounter++;                   // incrémente le compteur
-    if (enemyMoveCounter >= enemySpeed) { // si le compteur atteint la vitesse
-        enemyMoveCounter = 0;             // réinitialisation
 
-        bool mustGoDown = false;          // flag pour savoir si on doit descendre
+    // -------------------------------
+    // Compteur pour gérer vitesse ennemis
+    // -------------------------------
+    enemyMoveCounter++;
+
+    if (enemyMoveCounter >= enemySpeed) { // seulement si on atteint la vitesse
+        enemyMoveCounter = 0;             // reset compteur
+
+        bool mustGoDown = false;
+
+        // vérifier si un ennemi toucherait le mur
         for (const auto& e : enemies) {
             if (e.x + enemyDirection < 0 || e.x + enemyDirection >= width) {
-                mustGoDown = true;       // un ennemi touche le mur
+                mustGoDown = true;
                 break;
             }
         }
 
+        // si un ennemi touche un mur → descente
         if (mustGoDown) {
-            enemyDirection *= -1;        // inverse le sens
-            for (auto& e : enemies) e.y -= 1; // descente vers le joueur
+            enemyDirection *= -1;            // inverser direction
+            for (auto& e : enemies)
+                e.y -= 1;                   // descendre d'une ligne
         } else {
-            for (auto& e : enemies) e.x += enemyDirection; // déplacement normal
+            // déplacement horizontal normal
+            for (auto& e : enemies)
+                e.x += enemyDirection;
         }
     }
 
-    // ---------------- Tirs ennemis aléatoires ----------------
-    if (!enemies.empty() && rand() % (20 - std::min(level, 15)) == 0) {
-        enemyShoot();
-    }
+    // -------------------------------
+    // Tirs ennemis aléatoires
+    // -------------------------------
+    if (rand() % (20 - std::min(level, 15)) == 0)
+        enemyShoot(); // un ennemi tire
 
-    // ---------------- Déplacement des tirs joueurs ----------------
-    for (int i = 0; i < bulletsY.size(); i++) bulletsY[i]++;
+    // -------------------------------
+    // Déplacement des tirs du joueur vers le haut
+    // -------------------------------
+    for (int i = 0; i < bulletsY.size(); i++)
+        bulletsY[i]++;
 
-    // ---------------- Déplacement des tirs ennemis ----------------
-    for (int i = 0; i < enemyBulletsY.size(); i++) enemyBulletsY[i]--;
+    // -------------------------------
+    // Déplacement des tirs ennemis vers le bas
+    // -------------------------------
+    for (int i = 0; i < enemyBulletsY.size(); i++)
+        enemyBulletsY[i]--;
 
-    // ---------------- Suppression des tirs joueurs hors écran ----------------
-    for (int i = bulletsY.size() - 1; i >= 0; i--) {
-        if (bulletsY[i] >= height) {
-            bulletsX.erase(bulletsX.begin() + i);
-            bulletsY.erase(bulletsY.begin() + i);
-        }
-    }
-
-    // ---------------- Suppression des tirs ennemis hors écran ----------------
+    // -------------------------------
+    // Suppression des tirs ennemis hors écran
+    // -------------------------------
     for (int i = enemyBulletsY.size() - 1; i >= 0; i--) {
         if (enemyBulletsY[i] < 0) {
             enemyBulletsX.erase(enemyBulletsX.begin() + i);
@@ -118,77 +129,93 @@ void Game::update() {
         }
     }
 
-    // ---------------- Mise à jour des explosions ----------------
+    // -------------------------------
+    // Mise à jour des explosions
+    // -------------------------------
     for (int i = 0; i < explosions.size(); i++) {
-        explosions[i].timer--;                 // décrémente le timer
-        if (explosions[i].timer <= 0) {       // si terminé
-            explosions.erase(explosions.begin() + i);
-            i--;
+        explosions[i].timer--;              // réduire timer de l’explosion
+        if (explosions[i].timer <= 0) {    // si fini
+            explosions.erase(explosions.begin() + i); // supprimer explosion
+            i--; // ajuster l’indice après suppression
         }
     }
 
-    // ---------------- Collision tir ennemi → joueur ----------------
+    // -------------------------------
+    // Collision tirs ennemis → joueur
+    // -------------------------------
     for (int i = enemyBulletsY.size() - 1; i >= 0; i--) {
         if (enemyBulletsX[i] == playerX && enemyBulletsY[i] == 0) {
-            enemyBulletsX.erase(enemyBulletsX.begin() + i); // supprime tir
+            enemyBulletsX.erase(enemyBulletsX.begin() + i);
             enemyBulletsY.erase(enemyBulletsY.begin() + i);
 
-            lives--;                    // enlève une vie
-            if (lives <= 0) {           // si plus de vies
+            lives--; // retirer une vie
+
+            if (lives <= 0) {  // plus de vies → GAME OVER
                 running = false;
                 std::cout << "GAME OVER ! Vies = 0\n";
                 usleep(500000);
                 return;
-            } else {                     // sinon on continue
+            } else {
                 std::cout << "Touché ! Vies restantes : " << lives << "\n";
-                playerX = width / 2;     // repositionne le joueur
-                enemyBulletsX.clear();   // vide les tirs ennemis
+                playerX = width / 2;     // recentrer le joueur
+                enemyBulletsX.clear();   // nettoyer tirs ennemis
                 enemyBulletsY.clear();
-                usleep(300000);          // pause pour voir le message
-            }
-        }
-    }
-
-    // ---------------- Collision tir joueur → ennemis ----------------
-    for (int i = bulletsY.size() - 1; i >= 0; i--) {
-        for (int j = enemies.size() - 1; j >= 0; j--) {
-            if (bulletsX[i] == enemies[j].x && bulletsY[i] == enemies[j].y) {
-                explosions.push_back({enemies[j].x, enemies[j].y, 5}); // explosion
-                score += 10;             // augmente le score
-                enemies.erase(enemies.begin() + j); // supprime l'ennemi
-                bulletsX.erase(bulletsX.begin() + i); // supprime le tir
-                bulletsY.erase(bulletsY.begin() + i);
+                usleep(300000);
                 break;
             }
         }
     }
 
-    // ---------------- Collision ennemis → joueur ----------------
-    for (const auto& e : enemies) {
-        if (e.y == 0) {                   // ennemi atteint le bas
-            running = false;
-            std::cout << "GAME OVER ! Les ennemis ont atteint votre position !\n";
-            usleep(500000);
-            return;
+    // -------------------------------
+    // Collision tirs joueur → ennemis
+    // -------------------------------
+    for (int i = bulletsY.size() - 1; i >= 0; i--) {
+        for (int j = enemies.size() - 1; j >= 0; j--) {
+
+            // Si la balle touche un ennemi
+            if (bulletsX[i] == enemies[j].x && bulletsY[i] == enemies[j].y) {
+
+                // Ajouter explosion
+                explosions.push_back({ enemies[j].x, enemies[j].y, 5 });
+
+                // Gestion boss
+                if (enemies[j].isBoss) {
+                    bossHealth--;                 // retirer 1 point de vie
+                    if (bossHealth <= 0) {        // si boss mort
+                        enemies.erase(enemies.begin() + j); // supprimer boss
+                        score += 50;              // score plus élevé
+                    }
+                } else {
+                    enemies.erase(enemies.begin() + j);     // supprimer ennemi normal
+                    score += 10;                             // ajouter points
+                }
+
+                // supprimer balle après collision
+                bulletsX.erase(bulletsX.begin() + i);
+                bulletsY.erase(bulletsY.begin() + i);
+
+                break; // balle détruite, passer à la suivante
+            }
         }
     }
 
-    // ---------------- Passage à la vague suivante ----------------
-    if (enemies.empty()) {
-        level++;                          // augmente le niveau
-        spawnWave();                      // nouvelle vague
+    // -------------------------------
+    // Suppression tirs joueur hors écran
+    // -------------------------------
+    for (int i = bulletsY.size() - 1; i >= 0; i--) {
+        if (bulletsY[i] >= height) {
+            bulletsX.erase(bulletsX.begin() + i);
+            bulletsY.erase(bulletsY.begin() + i);
+        }
     }
-}
 
-// ======================================================
-//        Un ennemi tire un projectile vertical
-// ======================================================
-void Game::enemyShoot() {
-    if (enemies.empty()) return;
-
-    int idx = rand() % enemies.size(); // tir aléatoire
-    enemyBulletsX.push_back(enemies[idx].x);
-    enemyBulletsY.push_back(enemies[idx].y - 1);
+    // -------------------------------
+    // Vérifier si passage à la vague suivante
+    // -------------------------------
+    if (enemies.empty() && (level % 5 != 0 || bossHealth <= 0)) {
+        level++;
+        spawnWave(); // nouvelle vague
+    }
 }
 
 // ======================================================
@@ -197,66 +224,103 @@ void Game::enemyShoot() {
 void Game::render() {
     system("clear");
 
-    // bordure haut
+    // -------------------------------
+    // Bordure supérieure
+    // -------------------------------
     for (int x = 0; x < width + 2; x++) std::cout << "+";
     std::cout << "\n";
 
-    // HUD
+    // -------------------------------
+    // Affichage HUD
+    // -------------------------------
     std::cout << "SCORE : " << score
               << "    VIES : " << lives
               << "    NIVEAU : " << level
               << "\n\n";
 
-    // grille principale
+    // -------------------------------
+    // Grille principale
+    // -------------------------------
     for (int y = height - 1; y >= 0; y--) {
-        std::cout << "|";
+
+        std::cout << "|"; // bordure gauche
 
         for (int x = 0; x < width; x++) {
+
             bool printed = false;
 
-            // tir joueur
+            // Tir joueur
             for (int i = 0; i < bulletsX.size(); i++) {
-                if (bulletsX[i] == x && bulletsY[i] == y) { std::cout << '|'; printed = true; break; }
-            }
-
-            // tir ennemi
-            if (!printed) {
-                for (int i = 0; i < enemyBulletsX.size(); i++) {
-                    if (enemyBulletsX[i] == x && enemyBulletsY[i] == y) { std::cout << '!'; printed = true; break; }
+                if (bulletsX[i] == x && bulletsY[i] == y) {
+                    std::cout << '|';
+                    printed = true;
+                    break;
                 }
             }
 
-            // ennemis
+            // Tir ennemi
+            if (!printed) {
+                for (int i = 0; i < enemyBulletsX.size(); i++) {
+                    if (enemyBulletsX[i] == x && enemyBulletsY[i] == y) {
+                        std::cout << '!';
+                        printed = true;
+                        break;
+                    }
+                }
+            }
+
+            // Ennemi / Boss
             if (!printed) {
                 for (const auto& e : enemies) {
                     if (e.x == x && e.y == y) {
-                        if (e.isBoss) std::cout << 'B';  // boss 
-                        else std::cout << 'M';  // ennemi normal
+                        if (e.isBoss) std::cout << 'B'; // Boss
+                        else std::cout << 'M';           // Ennemi normal
                         printed = true;
-                        break; }
+                        break;
+                    }
                 }
             }
 
-            // explosions
+            // Explosion
             if (!printed) {
                 for (const auto& ex : explosions) {
-                    if (ex.x == x && ex.y == y) { std::cout << '*'; printed = true; break; }
+                    if (ex.x == x && ex.y == y) {
+                        std::cout << '*';
+                        printed = true;
+                        break;
+                    }
                 }
             }
 
-            // joueur
+            // Joueur
             if (!printed) {
-                if (y == 0 && x == playerX) std::cout << 'A';
-                else std::cout << '.';
+                if (y == 0 && x == playerX)
+                    std::cout << 'A';
+                else
+                    std::cout << '.';
             }
         }
 
-        std::cout << "|\n";
+        std::cout << "|\n"; // bordure droite
     }
 
-    // bordure bas
+    // -------------------------------
+    // Bordure inférieure
+    // -------------------------------
     for (int x = 0; x < width + 2; x++) std::cout << "+";
     std::cout << "\n";
+
+    // -------------------------------
+    // Affichage vie boss si présent
+    // -------------------------------
+    if (level % 5 == 0 && bossHealth > 0) {
+        std::cout << "BOSS HP : ";
+        for (int i = 0; i < bossMaxHealth; i++) {
+            if (i < bossHealth) std::cout << "|"; // points de vie actuels
+            else std::cout << ".";               // vie perdue
+        }
+        std::cout << "\n\n";
+    }
 }
 
 // ======================================================
@@ -265,6 +329,19 @@ void Game::render() {
 void Game::shoot() {
     bulletsX.push_back(playerX);
     bulletsY.push_back(0);
+}
+
+// ======================================================
+//        Un ennemi tire un projectile vertical
+// ======================================================
+void Game::enemyShoot() {
+    if (enemies.empty()) return;
+
+    // choisir un ennemi au hasard
+    int idx = rand() % enemies.size();
+
+    enemyBulletsX.push_back(enemies[idx].x);
+    enemyBulletsY.push_back(enemies[idx].y - 1);
 }
 
 // ======================================================
@@ -279,8 +356,9 @@ void Game::spawnWave() {
         boss.x = width / 2;  // centré
         boss.y = height - 1; // tout en haut
         boss.isBoss = true;
-        boss.hp = 10;         // exemple : boss avec 10 PV
         enemies.push_back(boss);
+        bossHealth = 20 + level * 2;  // vie en fonction du niveau
+        bossMaxHealth = bossHealth;
         std::cout << "\n--- BOSS LEVEL " << level << " ---\n";
     }else{
 

@@ -32,6 +32,9 @@ private:
     int height;      // hauteur de l'écran
     int playerX;     // position du joueur
     bool running;    // état du jeu
+    int bossHealth; // vie actuelle du boss
+    int bossMaxHealth; // vie maximale du boss
+
     
     std::vector<int> bulletsX; // positions X des tirs
     std::vector<int> bulletsY; // positions Y des tirs
