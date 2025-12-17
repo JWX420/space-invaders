@@ -1,16 +1,37 @@
 #include <iostream>
 #include <vector>
-#include <unistd.h>     // usleep : temporisation
-#include <termios.h>    // lecture clavier non bloquante
 #include <stdio.h>
 #include "Game.hpp"
 #include <algorithm>
 #include <cstdlib>
+#include <chrono>
+#include <thread>
+#include <ctime>
+
+#ifndef USE_SFML
+    #if defined(_WIN32)
+        #include <conio.h>
+    #else
+        #include <termios.h>  // lecture clavier non bloquante
+        #include <unistd.h> // usleep : temporisation
+    #endif
+#endif
+
+#ifdef USE_SFML
+    #include <SFML/Graphics.hpp>
+    #include <SFML/Window.hpp>
+#endif
+
+static void sleep_ms(int ms) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+}
+
 
 // ======================================================
 //                   CONSTRUCTEUR DU JEU
 // ======================================================
 Game::Game() {
+    std::srand(static_cast<unsigned>(std::time(nullptr)));
     width = 40;             // largeur du terrain
     height = 10;            // hauteur du terrain
     playerX = width / 2;    // joueur centré
