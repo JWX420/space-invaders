@@ -417,3 +417,32 @@ void Game::spawnWave() {
 
     }
 }
+#ifdef USE_SFML
+// ======================================================
+//                  BOUCLE SFML (GRAPHique)
+// ======================================================
+void Game::runSFML(const std::string& fontPath)  {
+    const float TICK_SECONDS = 0.10f;
+
+    const int cell = 20;
+    const int margin = 20;
+    const int hudH = 60;
+
+    const int winW = margin * 2 + width * cell;
+    const int winH = margin * 2 + hudH + height * cell;
+
+    sf::RenderWindow window(sf::VideoMode(winW, winH), "Space Invaders (SFML)");
+    window.setFramerateLimit(60);
+
+    sf::Font font;
+    bool fontOk = font.loadFromFile(fontPath);
+
+    sf::Text hud;
+    if (fontOk) {
+        hud.setFont(font);
+        hud.setCharacterSize(18);
+        hud.setPosition(static_cast<float>(margin), 10.f);
+    }
+
+}
+#endif
