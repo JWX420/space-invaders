@@ -505,6 +505,65 @@ void Game::runSFML(const std::string& fontPath)  {
             player.setPosition(p.x + cell * 0.05f, p.y + cell * 0.25f);
             window.draw(player);
         }
+           for (const auto& e : enemies) {
+            sf::Vector2f size(cell * 0.85f, cell * 0.65f);
+            if (e.isBoss) size = sf::Vector2f(cell * 1.3f, cell * 0.9f);
 
+            sf::RectangleShape alien(size);
+            alien.setFillColor(e.isBoss ? sf::Color(240, 140, 80) : sf::Color(200, 80, 220));
+
+            const auto p = gridToPixel(e.x, e.y);
+            alien.setPosition(p.x + (cell - size.x) * 0.5f, p.y + (cell - size.y) * 0.5f);
+            window.draw(alien);
+        }
+
+        for (std::size_t i = 0; i < bulletsX.size(); i++) {
+            sf::RectangleShape b(sf::Vector2f(cell * 0.15f, cell * 0.6f));
+            b.setFillColor(sf::Color(240, 240, 240));
+            const auto p = gridToPixel(bulletsX[i], bulletsY[i]);
+            b.setPosition(p.x + cell * 0.425f, p.y + cell * 0.2f);
+            window.draw(b);
+        }
+
+        for (std::size_t i = 0; i < enemyBulletsX.size(); i++) {
+            sf::RectangleShape b(sf::Vector2f(cell * 0.15f, cell * 0.6f));
+            b.setFillColor(sf::Color(255, 120, 120));
+            const auto p = gridToPixel(enemyBulletsX[i], enemyBulletsY[i]);
+            b.setPosition(p.x + cell * 0.425f, p.y + cell * 0.2f);
+            window.draw(b);
+        }
+
+        for (const auto& ex : explosions) {
+            sf::CircleShape c(cell * 0.35f);
+            c.setFillColor(sf::Color(255, 210, 60, static_cast<sf::Uint8>(40 + ex.timer * 40)));
+            const auto p = gridToPixel(ex.x, ex.y);
+            c.setPosition(p.x + cell * 0.15f, p.y + cell * 0.15f);
+            window.draw(c);
+        }
+
+        if (fontOk) {
+            hud.setString(
+                "Score: " + std::to_string(score) +
+                "   Lives: " + std::to_string(lives) +
+                "   Level: " + std::to_string(level) +
+                "   (Move: A/D or ←/→, Shoot: Space, Quit: Esc)"
+            );
+            window.draw(hud);
+
+            if (level % 5 == 0 && bossHealth > 0) {
+                sf::Text bossTxt;
+                bossTxt.setFont(font);
+                bossTxt.setCharacterSize(18);
+                bossTxt.setPosition(static_cast<float>(margin), 32.f);
+                bossTxt.setString("Boss HP: " + std::to_string(bossHealth) + "/" + std::to_string(bossMaxHealth));
+                window.draw(bossTxt);
+            }
+        }
+
+        window.display();
+
+        if (!running) {
+        }
+    }
 }
 #endif
