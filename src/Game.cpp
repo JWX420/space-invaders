@@ -453,6 +453,42 @@ void Game::runSFML(const std::string& fontPath)  {
 
     bool requestShoot = false;
     float shootCooldown = 0.f;
+     while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed) window.close();
+            if (event.type == sf::Event::KeyPressed) {
+                if (event.key.code == sf::Keyboard::Escape) {
+                    window.close();
+                }
+                if (event.key.code == sf::Keyboard::Space) {
+                    requestShoot = true;
+                }
+            }
+        }
+
+        const float dt = clock.restart().asSeconds();
+        accumulator += dt;
+        shootCooldown = std::max(0.f, shootCooldown - dt);
+
+        // Inputs temps-réel (déplacement continu)
+        const bool leftHeld = sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::A);
+        const bool rightHeld = sf::Keyboard::isKeyPressed(sf::Keyboard::Right) || sf::Keyboard::isKeyPressed(sf::Keyboard::D);
+
+        while (accumulator >= TICK_SECONDS && running && window.isOpen()) {
+            accumulator -= TICK_SECONDS;
+
+            if (leftHeld && playerX > 0) playerX--;
+            if (rightHeld && playerX < width - 1) playerX++;
+
+            if (requestShoot && shootCooldown <= 0.f) {
+                shoot();
+                shootCooldown = 0.25f;
+            }
+            requestShoot = false;
+
+            update();
+        }
 
 }
 #endif
