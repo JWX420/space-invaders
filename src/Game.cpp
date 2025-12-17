@@ -7,13 +7,15 @@
 #include <chrono>
 #include <thread>
 #include <ctime>
+#include <unistd.h> // usleep : temporisation
 
 #ifndef USE_SFML
     #if defined(_WIN32)
         #include <conio.h>
+        #include <windows.h>
+
     #else
         #include <termios.h>  // lecture clavier non bloquante
-        #include <unistd.h> // usleep : temporisation
     #endif
 #endif
 
@@ -50,6 +52,8 @@ Game::Game() {
 // ======================================================
 //       Fonction utilitaire : lire une touche sans ENTER
 // ======================================================
+
+#ifndef USE_SFML
 static char getInput() {
 #if defined(_WIN32)
     if (_kbhit()) {
@@ -412,7 +416,8 @@ void Game::spawnWave() {
     enemySpeed = std::max(3, 10 - level);   // vitesse ennemis
     #ifndef USE_SFML
         std::cout << "\n--- NIVEAU " << level << " ---\n";
-        usleep(500000);
+        sleep_ms(500
+        );
     #endif
 
     }
@@ -563,6 +568,8 @@ void Game::runSFML(const std::string& fontPath)  {
         window.display();
 
         if (!running) {
+            window.close();
+
         }
     }
 }
