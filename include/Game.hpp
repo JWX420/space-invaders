@@ -1,4 +1,5 @@
 #include <vector> // nécessaire pour utiliser std::vector
+#include <string>
 
 class Game {
     struct Enemy {
@@ -18,6 +19,10 @@ class Game {
 public:
     Game();          // constructeur
     void run();
+#ifdef USE_SFML
+    // Version graphique (SFML)
+    void runSFML(const std::string& fontPath = "resources/DejaVuSans.ttf");
+#endif
     void update();
     void render();
     void processInput();  
