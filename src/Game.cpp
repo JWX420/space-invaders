@@ -251,6 +251,8 @@ void Game::update() {
 // ======================================================
 //                  AFFICHAGE ASCII
 // ======================================================
+#ifndef USE_SFML
+
 void Game::render() {
     system("clear");
 
@@ -352,7 +354,7 @@ void Game::render() {
         std::cout << "\n\n";
     }
 }
-
+#endif
 // ======================================================
 //                  Tir du joueur
 // ======================================================
@@ -408,7 +410,10 @@ void Game::spawnWave() {
 
     enemyDirection = 1;                     // direction initiale
     enemySpeed = std::max(3, 10 - level);   // vitesse ennemis
+    #ifndef USE_SFML
+        std::cout << "\n--- NIVEAU " << level << " ---\n";
+        usleep(500000);
+    #endif
 
-    std::cout << "\n--- NIVEAU " << level << " ---\n";
-    usleep(500000);}
+    }
 }
