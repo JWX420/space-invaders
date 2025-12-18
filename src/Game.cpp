@@ -45,6 +45,7 @@ static void enableRawMode() {
     raw.c_cc[VMIN] = 0;
     raw.c_cc[VTIME] = 0;
     tcsetattr(0, TCSANOW, &raw);
+    std::cout << "\033[?25l";
 #endif
 }
 
@@ -426,11 +427,6 @@ void Game::spawnWave() {
 
     enemyDirection = 1;                     // direction initiale
     enemySpeed = std::max(2, 15 - level);   // vitesse ennemis
-    #ifndef USE_SFML
-        std::cout << "\n--- NIVEAU " << level << " ---\n";
-        sleep_ms(1000
-        );
-    #endif
 
     }
 }
@@ -563,7 +559,7 @@ void Game::runSFML(const std::string& fontPath)  {
                 "Score: " + std::to_string(score) +
                 "   Lives: " + std::to_string(lives) +
                 "   Level: " + std::to_string(level) +
-                "   (Move: A/D or ←/→, Shoot: Space, Quit: Esc)"
+                "   (Move: A/D or < / >, Shoot: Space, Quit: Esc)"
             );
             window.draw(hud);
 
