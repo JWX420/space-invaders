@@ -1,6 +1,15 @@
 #include <vector> // nécessaire pour utiliser std::vector
 #include <string>
 
+/**
+ * \brief Classe principale du jeu Space Invaders.
+ *
+ * \details Cette classe contient la logique du jeu (deplacements, collisions,
+ *          score, niveaux) et propose deux modes d execution :
+ *          - console (ASCII)
+ *          - graphique (SFML)
+ */
+
 class Game {
     struct Enemy {
     int x;
