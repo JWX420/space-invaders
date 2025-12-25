@@ -21,7 +21,7 @@ public:
     void run();
 #ifdef USE_SFML
     // Version graphique (SFML)
-    void runSFML(const std::string& fontPath = "resources/DejaVuSans.ttf");
+    void runSFML(const std::string& fontPath = "assets/fonts/DejaVuSans.ttf");
 #endif
     void update();
     void render();
