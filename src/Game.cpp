@@ -647,13 +647,34 @@ void Game::runSFML(const std::string& fontPath)  {
             window.draw(b);
         }
 
+        // -------------------------------
+        // Explosions : animation simple (sans sprites)
+        // -------------------------------
+        // On fait varier la taille et la transparence en fonction du timer.
+        // Ici, timer décroît (ex: 5 -> 0).
         for (const auto& ex : explosions) {
-            sf::CircleShape c(cell * 0.35f);
-            c.setFillColor(sf::Color(255, 210, 60, static_cast<sf::Uint8>(40 + ex.timer * 40)));
+            const float t = std::max(0.f, std::min(1.f, ex.timer / 5.f));
+
+            // Taille : plus grande au début, puis plus petite
+            const float radius = (0.20f + 0.55f * (1.f - t)) * cell;
+
+            // Couleur : jaune -> orange (effet "chaleur")
+            const sf::Uint8 r = 255;
+            const sf::Uint8 g = static_cast<sf::Uint8>(120 + 120 * t);
+            const sf::Uint8 b = 40;
+
+            // Transparence : disparaît progressivement
+            const sf::Uint8 a = static_cast<sf::Uint8>(200 * t);
+
+            sf::CircleShape c(radius);
+            c.setFillColor(sf::Color(r, g, b, a));
+
             const auto p = gridToPixel(ex.x, ex.y);
-            c.setPosition(p.x + cell * 0.15f, p.y + cell * 0.15f);
+            // Centrer le cercle dans la cellule
+            c.setPosition(p.x + (cell * 0.5f - radius), p.y + (cell * 0.5f - radius));
             window.draw(c);
         }
+
 
         if (fontOk) {
             hud.setString(
