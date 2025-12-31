@@ -708,11 +708,48 @@ void Game::runSFML(const std::string& fontPath)  {
         if (fontOk) {
             hud.setString(
                 "Score: " + std::to_string(score) +
-                "   Lives: " + std::to_string(lives) +
+                    "   Lives: " + std::string(12, ' ') +
+
                 "   Level: " + std::to_string(level) +
                 "   (Move: A/D or < / >, Shoot: Space, Quit: Esc)"
             );
             window.draw(hud);
+            // -------------------------------
+            // -------------------------------
+            // Affichage des vies : icônes à côté du libellé "Lives:"
+            // -------------------------------
+            {
+                const float iconW = 14.f;
+                const float iconH = 10.f;
+                const float gap = 6.f;
+
+                // On calcule où se situe "Lives:" dans la chaîne HUD pour placer les icônes juste après
+                const std::string hudStr = hud.getString().toAnsiString();
+                const std::string tag = "Lives:";
+                const std::size_t pos = hudStr.find(tag);
+
+                // Valeur par défaut si jamais on ne trouve pas (ne devrait pas arriver)
+                float startX = static_cast<float>(margin) + 180.f;
+                float y = 16.f;
+
+                if (pos != std::string::npos) {
+                    const std::size_t after = pos + tag.size() + 1; // +1 pour l espace
+                    const sf::Vector2f p = hud.findCharacterPos(static_cast<unsigned int>(after));
+                    startX = p.x;
+                    y = p.y + 4.f; // ajustement vertical pour centrer les icônes sur la ligne
+                }
+
+                for (int i = 0; i < lives; ++i) {
+                    sf::RectangleShape life(sf::Vector2f(iconW, iconH));
+                    life.setFillColor(sf::Color(255, 90, 90));
+                    life.setOutlineThickness(1.f);
+                    life.setOutlineColor(sf::Color(255, 200, 200));
+                    life.setPosition(startX + i * (iconW + gap), y);
+                    window.draw(life);
+                }
+            }
+
+
 
             if (level % 5 == 0 && bossHealth > 0) {
                 sf::Text bossTxt;
