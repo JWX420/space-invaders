@@ -1,6 +1,15 @@
 #include <vector> // nécessaire pour utiliser std::vector
 #include <string>
 
+/**
+ * \brief Classe principale du jeu Space Invaders.
+ *
+ * \details Cette classe contient la logique du jeu (deplacements, collisions,
+ *          score, niveaux) et propose deux modes d execution :
+ *          - console (ASCII)
+ *          - graphique (SFML)
+ */
+
 class Game {
     struct Enemy {
     int x;
@@ -21,7 +30,7 @@ public:
     void run();
 #ifdef USE_SFML
     // Version graphique (SFML)
-    void runSFML(const std::string& fontPath = "resources/DejaVuSans.ttf");
+    void runSFML(const std::string& fontPath = "assets/fonts/DejaVuSans.ttf");
 #endif
     void update();
     void render();
@@ -31,6 +40,16 @@ public:
     void spawnWave();
 
 
+
+    // ------------------
+    // Accesseurs (tests / debug)
+    // ------------------
+    int getScore() const { return score; }
+    int getLives() const { return lives; }
+    int getLevel() const { return level; }
+    int getPlayerX() const { return playerX; }
+    std::size_t getEnemyCount() const { return enemies.size(); }
+    std::size_t getPlayerBulletCount() const { return bulletsX.size(); }
 
 private:
     int width;       // largeur de l'écran

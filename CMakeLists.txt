@@ -1,49 +1,66 @@
-# CMake minimum
 cmake_minimum_required(VERSION 3.10)
+project(space_invaders LANGUAGES CXX)
 
-# Projet
-project(SpaceInvaders VERSION 1.0 LANGUAGES CXX)
-
-# C++17
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Dossiers include du projet
-include_directories(include)
+# Sources communes
+set(GAME_SOURCES
+    src/Game.cpp
+)
 
-# Tous les fichiers sources
-file(GLOB SOURCES "src/*.cpp")
+# ------------------
+# Version console
+# ------------------
+add_executable(space_invaders_console
+    src/main.cpp
+    ${GAME_SOURCES}
+)
+target_include_directories(space_invaders_console PRIVATE include)
 
-# ---------------------------
-# Version console (toujours buildée)
-# ---------------------------
-# On retire main_sfml.cpp pour la version console
-list(REMOVE_ITEM SOURCES "${CMAKE_SOURCE_DIR}/src/main_sfml.cpp")
-add_executable(space_invaders_console ${SOURCES})
+# ------------------
+# Version SFML
+# ------------------
+find_package(SFML 2.5 COMPONENTS graphics window system audio REQUIRED)
 
-# ---------------------------
-# Version SFML (si disponible)
-# ---------------------------
-set(SFML_ROOT "${CMAKE_SOURCE_DIR}/external/SFML-2.5.1")
-set(SFML_INCLUDE_DIR "${SFML_ROOT}/include")
-set(SFML_LIBRARY_DIR "${SFML_ROOT}/lib")
+add_executable(space_invaders_sfml
+    src/main_sfml.cpp
+    ${GAME_SOURCES}
+)
+target_include_directories(space_invaders_sfml PRIVATE include)
+target_compile_definitions(space_invaders_sfml PRIVATE USE_SFML)
+target_link_libraries(space_invaders_sfml
+    sfml-graphics
+    sfml-window
+    sfml-system
+    sfml-audio
+)
 
-if(EXISTS "${SFML_INCLUDE_DIR}" AND EXISTS "${SFML_LIBRARY_DIR}")
-    message(STATUS "Utilisation de SFML locale : ${SFML_ROOT}")
+# --- Copy assets next to executable (so relative paths work) ---
+add_custom_command(TARGET space_invaders_sfml POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_SOURCE_DIR}/assets
+            $<TARGET_FILE_DIR:space_invaders_sfml>/assets
+)
 
-    # Inclure et linker SFML
-    include_directories(${SFML_INCLUDE_DIR})
-    link_directories(${SFML_LIBRARY_DIR})
-    
-    # On retire main.cpp pour la version SFML
-    file(GLOB SFML_SOURCES "src/*.cpp")
-    list(REMOVE_ITEM SFML_SOURCES "${CMAKE_SOURCE_DIR}/src/main.cpp")
+# ------------------
+# Tests (Catch2)
+# ------------------
+include(FetchContent)
+FetchContent_Declare(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG v3.5.4
+)
+FetchContent_MakeAvailable(Catch2)
 
-    add_executable(space_invaders_sfml ${SFML_SOURCES})
+enable_testing()
 
-    # Bibliothèques SFML à lier
-    target_link_libraries(space_invaders_sfml sfml-graphics sfml-window sfml-system)
-else()
-    message(STATUS "Pas de SFML locale trouvée sous ${SFML_ROOT} (build console uniquement)")
-endif()
+add_executable(space_invaders_tests
+    tests/test_game.cpp
+    src/Game.cpp
+)
+target_include_directories(space_invaders_tests PRIVATE include)
+target_link_libraries(space_invaders_tests PRIVATE Catch2::Catch2WithMain)
 
+add_test(NAME space_invaders_tests COMMAND space_invaders_tests)
